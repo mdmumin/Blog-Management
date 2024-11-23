@@ -1,3 +1,27 @@
+<?php 
+	include '../lib/Session.php';
+	Session::checkSession();
+ ?>
+<?php include '../config/config.php'; ?>
+<?php include '../lib/Database.php'; ?>
+<?php include '../helpers/Format.php'; ?>
+
+<?php
+	$db = new Database();
+	$fm = new Format();
+?>
+
+<?php
+  //set headers to NOT cache a page
+  header("Cache-Control: no-cache, must-revalidate"); //HTTP 1.1
+  header("Pragma: no-cache"); //HTTP 1.0
+  header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); 
+  // Date in the past
+  //or, if you DO want a file to cache, use:
+  header("Cache-Control: max-age=2592000"); 
+//30days (60sec * 60min * 24hours * 30days)
+?>
+
 <!DOCTYPE html>
 <html>
 
@@ -40,17 +64,22 @@
                     <img src="img/livelogo.png" alt="Logo" />
                 </div>
                 <div class="floatleft middle">
-                    <h1>Training with live project</h1>
-                    <p>www.trainingwithliveproject.com</p>
+                    <h1>Mumin with Blog Management</h1>
+                    <p>www.muminblog.com</p>
                 </div>
                 <div class="floatright">
                     <div class="floatleft">
                         <img src="img/img-profile.jpg" alt="Profile Pic" />
                     </div>
+                    <?php 
+                        if (isset($_GET['action']) && $_GET['action'] == "logout") {
+                            Session::destroy();
+                        }
+                    ?>
                     <div class="floatleft marginleft10">
                         <ul class="inline-ul floatleft">
                             <li>Hello Admin</li>
-                            <li><a href="#">Logout</a></li>
+                            <li><a href="?action=logout">Logout</a></li>
                         </ul>
                     </div>
                 </div>

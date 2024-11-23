@@ -34,7 +34,7 @@
 				$password = mysqli_real_escape_string($db->link, $password);
 
 				$query = "SELECT * FROM tbl_user WHERE username = '$username' AND password = '$password' ";
-
+                 echo "Hello";
 				$result = $db->select($query);
 				if ($result == true ) {
 					$value = mysqli_fetch_array($result);
@@ -43,12 +43,13 @@
 						Session::set("login", true);
 						Session::set("username", $value['username']);
 						Session::set("userid", $value['id']);
+
 						header("Location:index.php");
 					}else {
-						echo "<span style='color:red; font-size: 20px' >No Data found ! </span>";
+						echo "<span class='error' >No Data found ! </span>";
 					}
 				}else{
-					echo "<span style='color:red; font-size: 20px' >Username or Password not matched!! </span>";
+					echo "<span class='error'' >Username or Password not matched!! </span>";
 				}
 			}
 		?>
