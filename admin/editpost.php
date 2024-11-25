@@ -1,8 +1,16 @@
-﻿<?php include "inc/header.php" ?>
+<?php include "inc/header.php" ?>
 <?php include "inc/sidebar.php" ?>
+
+<?php 
+    if (!isset($_GET['editpostid']) || $_GET['editpostid'] == NULL) {
+        echo "<script>window.location = 'postlist.php';</script>";
+    }else{
+        $editid = $_GET['editpostid'];
+    }
+?>
 <div class="grid_10">
     <div class="box round first grid">
-        <h2>Add New Post</h2>
+        <h2>Update Post</h2>
         <?php 
            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $title = mysqli_real_escape_string($db->link, $_POST['title']);
@@ -20,33 +28,58 @@
                 $file_ext = strtolower(end($div));
                 $unique_image = substr(md5(time()), 0, 10).'.'.$file_ext;
                 $uploaded_image = "upload/".$unique_image;
-                if ($title == "" || $cat == "" || $body == "" || $tags == "" || $author == "" || $file_name == "") {
+                if ($title == "" || $cat == "" || $body == "" || $tags == "" || $author == "") {
                     echo "<span class='error'>Field must not be empty !</span>";
 
-                }elseif ($file_size >1048567) {
-                    echo "<span class='error'>Image Size should be less then 1MB!
-                    </span>";
+                }else{
+                    if (!empty($file_name)) {
+                        # code...
+                    
+                        if ($file_size >1048567) {
+                            echo "<span class='error'>Image Size should be less then 1MB!
+                            </span>";
 
-                } elseif (in_array($file_ext, $permited) === false) {
-                    echo "<span class='error'>You can upload only:-"
-                    .implode(', ', $permited)."</span>";
+                        } elseif (in_array($file_ext, $permited) === false) {
+                            echo "<span class='error'>You can upload only:-"
+                            .implode(', ', $permited)."</span>";
 
-                } else{
-                    move_uploaded_file($file_temp, $uploaded_image);
-                    $query = "INSERT INTO tbl_post(cat, title, body, image, author, tags)
-                     VALUES('$cat', '$title', '$body', '$uploaded_image', '$author', '$tags')";
-
-                    $inserted_rows = $db->insert($query);
-                    if ($inserted_rows) {
-                        echo "<span class='success'>Post Inserted Successfully.</span>";
+                        } else{
+                            move_uploaded_file($file_temp, $uploaded_image);
+                            $query="update tbl_post
+                                    set
+                                    cat='$cat', title='$title', body='$body', image='$uploaded_image', author='$author', tags='$tags'
+                                    where id='$editid'";
+                            $updated_rows = $db->update($query);
+                            if ($updated_rows) {
+                                echo "<span class='success'>Post Updated Successfully.</span>";
+                            }else {
+                                echo "<span class='error'>Post Not Updated Inserted !</span>";
+                            } 
+                        } 
+                
                     }else {
-                        echo "<span class='error'>Post Not Inserted !</span>";
-                    } 
-                }                
+                        $query="update tbl_post
+                                    set
+                                    cat='$cat', title='$title', body='$body', author='$author', tags='$tags' 
+                                    where id='$editid'";
+                        $updated_rows = $db->update($query);
+                        if ($updated_rows) {
+                            echo "<span class='success'>Post Updated Successfully.</span>";
+                        }else {
+                            echo "<span class='error'>Post Not Updated Inserted !</span>";
+                        } 
+                    }
+                }    
             }
         ?>
         <div class="block">
-            <form action="addpost.php" method="post" enctype="multipart/form-data">
+            <?php 
+                $query = "select * from tbl_post where id='$editid' order by id desc";
+                $postid= $db->select($query);
+                while ($postresult= $postid->fetch_assoc()) {
+                    # code...
+            ?>
+            <form action="" method="post" enctype="multipart/form-data">
                 <table class="form">
 
                     <tr>
@@ -54,7 +87,7 @@
                             <label>Title</label>
                         </td>
                         <td>
-                            <input type="text" name="title" placeholder="Enter Post Title..." class="medium" />
+                            <input type="text" name="title" value="<?php echo $postresult['title']; ?>" class="medium" />
                         </td>
                     </tr>
 
@@ -64,14 +97,17 @@
                         </td>
                         <td>
                             <select id="select" name="cat">
-                                <option value="1">Select Category</option>
+                                <!-- <option value="1">Select Category</option> -->
+                                
                                 <?php
                                     $query = "select * from tbl_category";
                                     $category = $db->select($query);
                                     if ($category) {
                                         while ($result = $category->fetch_assoc()) {
                                             ?>
-                                <option value="<?php echo $result['id']; ?>"><?php echo $result['name']; ?></option>
+                                <option <?php if ($postresult['cat'] == $result['id']) {  ?>
+                                     selected="selected"
+                                <?php } ?> value="<?php echo $result['id']; ?>"><?php echo $result['name']; ?></option>
                                 <?php  } }    ?>
 
                             </select>
@@ -82,6 +118,7 @@
                             <label>Upload Image</label>
                         </td>
                         <td>
+                            <img src="<?php echo $postresult['image']; ?>" height="70px" width="100px" alt=""><br>
                             <input type="file" name="image" />
                         </td>
                     </tr>
@@ -90,7 +127,9 @@
                             <label>Content</label>
                         </td>
                         <td>
-                            <textarea class="tinymce" name="body"></textarea>
+                            <textarea class="tinymce" name="body">
+                                <?php echo $postresult['body']; ?>
+                            </textarea>
                         </td>
                     </tr>
                     <tr>
@@ -98,7 +137,7 @@
                             <label>Tags</label>
                         </td>
                         <td>
-                            <input type="text" name="tags" placeholder="Enter Post Tags..." class="medium" />
+                            <input type="text" name="tags" value="<?php echo $postresult['tags']; ?>" class="medium" />
                         </td>
                     </tr>
                     <tr>
@@ -106,7 +145,7 @@
                             <label>Author</label>
                         </td>
                         <td>
-                            <input type="text" name="author" placeholder="Enter Post author..." class="medium" />
+                            <input type="text" name="author" value="<?php echo $postresult['author']; ?>" class="medium" />
                         </td>
                     </tr>
                     <tr>
@@ -117,6 +156,7 @@
                     </tr>
                 </table>
             </form>
+            <?php } ?>
         </div>
     </div>
 </div>
